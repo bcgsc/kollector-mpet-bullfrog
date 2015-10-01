@@ -74,7 +74,7 @@ num_mp:=$(shell perl -MPOSIX -e \
 # e: sequencing error rate
 # c: read coverage
 max_kmers:=$(shell perl -MPOSIX -e \
-	'print ceil($(mp_frag_size)*3*(1 + $(error_rate)*$(target_read_cov)))')
+	'print ceil($(num_mp)*$(mp_frag_size)*3*(1 + $(error_rate)*$(target_read_cov)))')
 
 # kollector-mpet options (see kollector-mpet --help)
 kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
