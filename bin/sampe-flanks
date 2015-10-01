@@ -1,0 +1,129 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use File::Spec;
+
+my $script_name = (File::Spec->splitpath($0))[2];
+my $usage = <<HEREDOC;
+Usage: $script_name [-f <flank_file>] [SAM file]...
+
+For each paired-end alignment, report the distance
+from the left/right ends of the fragment to the
+left/right ends of the reference sequence. I call these
+the "flank lengths" for a paired-end alignment.
+
+If the `-f` option is given, add the given left/right
+flank lengths to the each paired alignment and output
+the corresponding coordinates on the reference.
+
+Options:
+   -f, --flanks FILE  TSV file containing left/right flank
+                      lengths [disabled]
+   -h, --help         show this message
+HEREDOC
+
+# parse command line opts
+my %options = ();
+my $getopt_success = GetOptions(
+	\%options,
+	'--flanks=s',
+	'--help',
+);
+if ($options{help}) { print $usage; exit 0; }
+
+# load left/right paddings from flank file
+my %left_padding=();
+my %right_padding=();
+if (exists($options{flanks})) {
+	open(my $flank_fh, $options{flanks}) or
+		die "error opening '" . $options{flanks}
+			. "': $?\n";
+	while(<$flank_fh>) {
+		my ($qname, $left, $right) = split;
+		$left_padding{$qname} = $left;
+		$right_padding{$qname} = $right;
+	}
+}
+
+# does the input include the SAM headers?
+my $headers = 0;
+# map rname => seq length
+my %rlen = ();
+
+# process input SAM
+while(<>) {
+
+	$headers = 1 if /^@/;
+	# record lengths of ref seqs for future use
+	if (/^\@SQ\s+SN:(\S+)\s+LN:(\S+)/) {
+		$rlen{$1} = $2;
+	}
+	next if /^@/;
+
+	# SAM format checking
+	if (!$headers) {
+		die "error: missing SAM headers\n";
+	}
+	my @fields = split /\t/;
+	if (@fields < 11) {
+		die "error: input does not appear to be SAM format\n";
+	}
+
+	# extract SAM fields
+	my $qname = $fields[0];
+	my $flag = $fields[1];
+	my $rname = $fields[2];
+	my $pos = $fields[3];
+	my $cigar = $fields[5];
+	my $tlen = $fields[8];
+
+	# skip "supplementary alignments" (extra lines due to a
+	# chimeric alignment)
+	next if $flag & hex('0x800');
+	# selects leftmost read in pair, when both reads are mapped
+	# to the same ref seq
+	next unless $tlen > 0;
+	
+	# ref lengths should already be loaded above
+	if (!exists($rlen{$rname})) {
+		die "error: no SAM header for ref seq '$rname'\n";
+	}
+	my $rlen = $rlen{$rname};
+
+	# calculate left clip length
+	my $left_clip = 0;
+	$_ = $cigar;
+	s/^(\d+)[SH]/$left_clip += $1/eg;
+
+	# load or calculate flank lengths
+	my $left_flank;
+	my $right_flank;
+	if (exists($options{flanks})) {
+		$left_flank = $left_padding{$qname};
+		$right_flank = $right_padding{$qname};
+	} else {
+		$left_flank = $pos - $left_clip - 1;
+		$right_flank = $rlen - ($pos - $left_clip + $tlen - 1);
+		$left_flank = 0 if $left_flank < 0;
+		$right_flank = 0 if $right_flank < 0;
+	}
+
+	# treat forward-reverse (FR) as the standard orientation
+	if ($flag & hex('0x80')) {
+		($left_flank, $right_flank) = ($right_flank, $left_flank);
+	}
+
+	# output result for current paired-end alignment
+	if (exists($options{flanks})) {
+		my $start_pos = $pos - $left_clip - $left_flank;
+		my $end_pos = $pos - $left_clip + $tlen - 1 + $right_flank;
+		$start_pos = 1 if $start_pos < 1;
+		$end_pos = $rlen if $end_pos > $rlen;
+		print join("\t", $rname, $start_pos, $end_pos) . "\n";
+	} else {
+		print join("\t", $qname, $left_flank, $right_flank) . "\n";
+	}
+}
