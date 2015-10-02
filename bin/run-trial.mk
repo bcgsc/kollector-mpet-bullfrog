@@ -46,38 +46,30 @@ endif
 #------------------------------------------------------------
 
 # genome size
-# (5 Gbp genome * 0.3X Moleculo coverage = 1.5 Gbp)
-genome_size?=1500000000
+# (sum length of Moleculo reads = 1.6Gbp)
+ref_size?=1600000000
 
-# mean MPET fragment size (5 kbp)
-# NOTE: the second MPET fragment size peak at 8 kbp is not well
-# captured by the Moleculo reads, because Moleculo N50 = 3.7 kbp.
-mp_frag_size?=5000
+# mean MPET fragment size = 3.2 kbp
+# (MPET frags >= 1000bp that map pairwise to Moleculo reads)
+mp_frag_size?=3200
 
 # target coverage for assembled MPET fragments;
 # used to calculate number of input MPET pairs
-target_genome_cov?=0.01
+mpet_cov?=0.01
 
 # target read coverage for each MPET fragment
-target_read_cov?=100
+kmer_cov?=350
 
 # approx sequencing error rate
 error_rate?=0.005
 
 # number of MPET fragments to assemble
-num_mp:=$(shell perl -MPOSIX -e \
-	'print floor($(target_genome_cov)*$(genome_size)/$(mp_frag_size)/3)')
+num_mp?=$(shell perl -MPOSIX -e \
+	'print floor($(mpet_cov)*$(ref_size)/$(mp_frag_size)/3)')
 
-# max kmers to recruit, based on formula:
-#
-#    n = G + Gec
-#
-# n: number of distinct kmers
-# G: genome size (sum of MPET fragment sizes * 3)
-# e: sequencing error rate
-# c: read coverage
-max_kmers:=$(shell perl -MPOSIX -e \
-	'print ceil($(num_mp)*$(mp_frag_size)*3*(1 + $(error_rate)*$(target_read_cov)))')
+# max kmers to recruit
+max_kmers?=$(shell perl -MPOSIX -e \
+	'print ceil($(num_mp)*$(mp_frag_size)*3*$(kmer_cov)')
 
 # kollector-mpet options (see kollector-mpet --help)
 kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
@@ -89,8 +81,9 @@ kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
 
 # report calculated parameters
 report-params:
-	@echo "number of MPET pairs =" $(num_mp)
-	@echo "max k-mers to recruit =" $(max_kmers)
+	@echo "Starting targeted assembly:"
+	@echo "  Number of MPET pairs =" $(num_mp)
+	@echo "  Max k-mers to recruit =" $(max_kmers)
 
 # sample input MPET reads (read 1)
 $(name).mp_read1.fq.gz: $(mpet)
