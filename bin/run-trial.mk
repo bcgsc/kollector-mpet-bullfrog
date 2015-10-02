@@ -102,7 +102,7 @@ $(name).mp_read2.fq.gz: $(mpet)
 
 # do targeted assembly of MPET frags
 $(name)-assembly.fa.gz: $(name).mp_read1.fq.gz $(name).mp_read2.fq.gz
-	kollector-mpet $(kollector_opt) $^ $(pet)
+	kollector-mpet $(kollector_opt) $(KOLLECTOR_OPT) $^ $(pet)
 
 # truncate assembled contigs to Moleculo lengths
 # (for evaluation purposes)
