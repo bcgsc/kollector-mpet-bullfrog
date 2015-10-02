@@ -63,11 +63,11 @@ endif
 
 # align MPET to moleculo
 $(name).mpet-to-moleculo.sam.gz: $(moleculo).bwt $(mp)
-	bwa mem -p -t$j $(moleculo) $(mp) | gzip > $@
+	bwa mem -t$j $(moleculo) $(mp) | gzip > $@
 
 # align MPET to contigs
 $(name).mpet-to-contig.sam.gz: $(contigs).bwt $(mp)
-	bwa mem -p -t$j $(contigs) $(mp) | gzip > $@
+	bwa mem -t$j $(contigs) $(mp) | gzip > $@
 
 # get MPET "flank lengths" -- distances from left/right ends of MPET fragments
 # to left/right ends of Moleculo reads
