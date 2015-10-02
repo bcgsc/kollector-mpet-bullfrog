@@ -22,6 +22,9 @@ default: check-params report-params $(name)-assembly.fa.gz \
 	$(name).misassembled-ids.txt
 
 check-params:
+ifndef moleculo
+	$(error missing required param `moleculo` (reference sequences))
+endif
 ifndef mpet
 	$(error missing required param `mpet` (MPET FASTQ pair))
 endif
