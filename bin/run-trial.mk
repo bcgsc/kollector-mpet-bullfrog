@@ -22,6 +22,9 @@ default: check-params report-params $(name)-assembly.fa.gz \
 	$(name).misassembled-ids.txt
 
 check-params:
+ifndef assembly_k
+	$(error missing required param `assembly_k` (ABySS k-mer size))
+endif
 ifndef moleculo
 	$(error missing required param `moleculo` (reference sequences))
 endif
@@ -69,11 +72,11 @@ num_mp?=$(shell perl -MPOSIX -e \
 
 # max kmers to recruit
 max_kmers?=$(shell perl -MPOSIX -e \
-	'print ceil($(num_mp)*$(mp_frag_size)*3*$(kmer_cov)')
+	'print ceil($(num_mp)*$(mp_frag_size)*3*$(kmer_cov))')
 
 # kollector-mpet options (see kollector-mpet --help)
 kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
-	-m20 -r $(repeat_filter) -n$(max_kmers)
+	-m20 -k$(assembly_k) -r $(repeat_filter) -n$(max_kmers)
 
 #------------------------------------------------------------
 # main rules
