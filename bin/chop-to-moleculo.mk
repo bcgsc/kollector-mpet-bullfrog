@@ -39,7 +39,12 @@ j=1
 .PHONY:
 default: check-params $(name).truncated.fa.gz
 
-check-params:
+check-name-param:
+ifndef name
+	$(error missing required param 'name' (output file prefix))
+endif
+
+check-params: check-name-param
 ifndef mp
 	$(error missing required param 'mp' (mate pair reads))
 endif
@@ -49,9 +54,15 @@ endif
 ifndef contigs
 	$(error missing required param 'contigs' (assembled MPET fragments))
 endif
-ifndef name
-	$(error missing required param 'name' (output file prefix))
-endif
+
+clean: check-name-param
+	rm -f $(name).mpet-to-moleculo.sam.gz \
+		$(name).mpet-to-contig.sam.gz \
+		$(name).mpet-flanks.txt \
+		$(name).truncated.bed
+
+clean-all: clean
+	rm -f $(name).truncated.fa.gz
 
 #------------------------------------------------------------
 # alignment rules
