@@ -63,9 +63,6 @@ mpet_cov?=0.01
 # target read coverage for each MPET fragment
 kmer_cov?=350
 
-# approx sequencing error rate
-error_rate?=0.005
-
 # number of MPET fragments to assemble
 num_mp?=$(shell perl -MPOSIX -e \
 	'print floor($(mpet_cov)*$(ref_size)/$(mp_frag_size)/3)')
