@@ -99,10 +99,11 @@ $(name)-assembly.fa.gz: $(name).mp_read1.fq.gz $(name).mp_read2.fq.gz
 
 # truncate assembled contigs to Moleculo lengths
 # (for evaluation purposes)
-$(name).truncated.fa.gz: $(name)-assembly.fa.gz
+$(name).truncated.fa.gz: $(name).fa.gz
 	chop-to-moleculo.mk \
 		mp="$(name).mp_read1.fq.gz $(name).mp_read2.fq.gz" \
 		moleculo=$(moleculo) contigs=$< name=$(name)
+	chop-to-moleculo.mk name=$(name) clean
 
 # evaluate truncated contigs
 $(name).misassembled-ids.txt: $(name).truncated.fa.gz
