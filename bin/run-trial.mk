@@ -73,7 +73,8 @@ max_kmers?=$(shell perl -MPOSIX -e \
 
 # kollector-mpet options (see kollector-mpet --help)
 kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
-	-m20 -k$(assembly_k) -r $(repeat_filter) -n$(max_kmers)
+	-m20 -k$(assembly_k) -r $(repeat_filter) -n$(max_kmers) \
+	$(if $h,-H $h)
 
 #------------------------------------------------------------
 # main rules
