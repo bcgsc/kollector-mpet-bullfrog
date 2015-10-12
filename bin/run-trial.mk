@@ -7,9 +7,10 @@ SHELL?=/bin/bash -o pipefail
 
 # threads
 j?=1
-
 # random seed
 seed?=1
+# bloom filter k-mer size
+K?=25
 
 #------------------------------------------------------------
 # meta rules
@@ -72,7 +73,7 @@ max_kmers?=$(shell perl -MPOSIX -e \
 	'print ceil($(num_mp)*$(mp_frag_size)*3*$(kmer_cov))')
 
 # kollector-mpet options (see kollector-mpet --help)
-kollector_opt:=-l30 -L30 -K25 -j$j -o $(name) -R $(name).report.txt \
+kollector_opt:=-l30 -L30 -K$K -j$j -o $(name) -R $(name).report.txt \
 	-m20 -k$(assembly_k) -r $(repeat_filter) -n$(max_kmers) \
 	$(if $h,-H $h)
 
