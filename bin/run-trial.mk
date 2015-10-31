@@ -95,9 +95,12 @@ $(name).mp_read1.fq.gz: $(mpet)
 $(name).mp_read2.fq.gz: $(mpet)
 	seqtk sample -s $(seed) $(word 2, $(mpet)) $(num_mp) | gzip > $@
 
-# do targeted assembly of MPET frags
+# do targeted assembly of MPET frags;
+# use 'env' to start with a clean environment (prevent inherited
+# environment vars from making ABySS behave in unexpected ways)
 $(name)-assembly.fa.gz: $(name).mp_read1.fq.gz $(name).mp_read2.fq.gz
-	kollector-mpet $(kollector_opt) $(KOLLECTOR_OPT) $^ $(pet)
+	/usr/bin/env -i PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) \
+		kollector-mpet $(kollector_opt) $(KOLLECTOR_OPT) $^ $(pet)
 
 # truncate assembled contigs to Moleculo lengths
 # (for evaluation purposes)
